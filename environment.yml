@@ -1,0 +1,11 @@
+name: mhd_env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy          # Essential for Matrix Math/Covariance
+  - scipy          # Essential for FFTs and Signal Processing
+  - matplotlib     # For plotting your wave reconstructions
+  - pandas         # For handling magnetometer data later
+  - ipykernel      # To use Jupyter Notebooks if you prefer
