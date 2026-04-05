@@ -24,60 +24,112 @@ X, Y = np.meshgrid(x, y)
 antenna1 = {
     "x": 0,
     "y": 0,
-    "frequency": 5,
+    "frequency": 1,
     "wavelength": 2
 }
 
 antenna2 = {
     "x": 2,
     "y": 0,
-    "frequency": 5,
+    "frequency": 1,
     "wavelength": 2
 }
 
 antenna3 = {
-    "x": 5,
-    "y": 5,
-    "frequency": 5,
+    "x": -2,
+    "y": 0,
+    "frequency": 1,
     "wavelength": 2
 }
 antennas = [antenna1, antenna2, antenna3]
+
+for a in antennas:
+    a["k"] = 2 * np.pi / a["wavelength"] ## k is the wave number, which is 2*pi/wavelength
+    a["omega"] = 2 * np.pi * a["frequency"] ## omega is
+
 ## SENSOR INFORMATION ##
-sensor_x = 5
-sensor_y = 0
+sensor1 = {
+    "x": -10,
+    "y": 10
+}
+sensor2 = {
+    "x": -10,
+    "y": 0
+}
+sensors = [sensor1, sensor2]
+tval = np.linspace(0, 5, 100)
+
+for s in sensors:
+    svalues = []
+ ## time values from 0 to 10 seconds, with 2000 points in between
+    for t in tval:
+        sensor_value = 0
+        for antenna in antennas:
+            antenna_x = antenna["x"]
+            antenna_y = antenna["y"]
+
+            k = antenna["k"]
+            omega = antenna["omega"]
+
+            sensor_x = s["x"]
+            sensor_y = s["y"]
+            R_sensor = np.sqrt((sensor_x - antenna_x)**2 + (sensor_y - antenna_y)**2)
+            sensor_value += np.cos(k * R_sensor - omega * t) ## signal at sensor is the sum of signals from all antennas
+        svalues.append(sensor_value) ## average signal from all antennas at sensor location
+
+    plt.figure()
+    plt.plot(tval, svalues)
+    plt.ylim(-5,5)
+    plt.title(f"Sensor Time Series at ({s['x']},{s['y']})")
+    plt.xlabel("Time")
+    plt.ylabel("Signal")
+    plt.grid(True)
 
 
 
-
-
-for t in np.linspace(0, 5, 100):    
-    Z = np.zeros_like(X)
+Z_frames = []
+for t in tval:  
+    Z = np.zeros_like(X) ## initialize Z as a zero matrix for each time step
+        
     for antenna in antennas:
         antenna_x = antenna["x"]
         antenna_y = antenna["y"]
-        frequency = antenna["frequency"]
-        wavelength = antenna["wavelength"]
 
-        k = 2 * np.pi / wavelength ## k is the wave number, which is 2*pi/wavelength
-        omega = 2 * np.pi * frequency ## omega is the angular frequency, which is 2*pi*frequency
+        k = antenna["k"]
+        omega = antenna["omega"]
+        
         R = np.sqrt((X - antenna_x)**2 + (Y - antenna_y)**2)
         Z += np.cos(k*R - omega*t)
-
-    plt.clf() ## clrs frame for each time step
-    plt.contourf(X, Y, Z, levels=100, cmap='gray') ## displays wave as a contour plot
-##plt.scatter(sensor_x, sensor_y, color='blue', label='Sensor')
+        
+    Z_frames.append(Z)    
+plt.ion()
+fig = plt.figure()
+for Z in Z_frames:
+    plt.clf() ## clear the plot for the next frame
+    plt.contourf(X, Y, Z, levels=50, cmap='gray') ## displays wave as a contour plot
     for antenna in antennas:
-        antenna_x = antenna["x"]
-        antenna_y = antenna["y"]
-        plt.scatter(antenna_x, antenna_y, color='red', label='Antenna') ## Displays antenna on grid
-    
+        plt.scatter(antenna["x"], antenna["y"], color='red', label='Antenna') ## Displays antenna on grid
+    for sensor in sensors:
+        plt.scatter(sensor["x"], sensor["y"], color='blue', label='Sensor') ## Displays sensor on grid
     plt.grid(True)
-    plt.xlim(-10, 10)## displays an easy grid (x,y) bound from (0,0) to (10,10)
+    plt.xlim(-10, 10) ## displays an easy grid (x,y) bound from (0,0) to (10,10)
     plt.ylim(-10, 10)
-    plt.axhline(0, linewidth=2, color='black')
-    plt.axvline(0, linewidth=2, color='black') 
-    plt.pause(0.03)
+    plt.pause(0.01)
+plt.ioff()
 plt.show()
+
+
+
+
+
+    
+    
+
+
+       
+       
+       
+       
 
 
 
