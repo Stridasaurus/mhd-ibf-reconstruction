@@ -5,6 +5,7 @@ import numpy as np
 import csv
 import math
 from flask_sqlalchemy import SQLAlchemy
+import pandas as pd
 ## VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVvv ##
 ## run "pip install matplotlib" in cmd terminal
 ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^##
@@ -64,6 +65,25 @@ sensor2 = {
 sensors = [sensor1, sensor2]
 tval = np.linspace(0, 5, 100)
 
+time_series = []
+for t in tval:
+    for s_id, sensor in enumerate(sensors):
+        amplitude = 0
+        for antenna in antennas:
+            antenna_x = antenna["x"]
+            antenna_y = antenna["y"]
+
+            k = antenna["k"]
+            omega = antenna["omega"]
+
+            sensor_x = sensor["x"]
+            sensor_y = sensor["y"]
+            R_sensor = np.sqrt((sensor_x - antenna_x)**2 + (sensor_y - antenna_y)**2)
+            amplitude += np.cos(k * R_sensor - omega * t + antenna["phase"]) ## signal at sensor is the sum of signals from all antennas
+        time_series.append([t, s_id, amplitude])
+
+print(time_series)
+
 for s in sensors:
     svalues = []
     for t in tval:
@@ -121,6 +141,8 @@ for Z in Z_frames:
     plt.pause(0.01)
 plt.ioff()
 plt.show()
+
+
 
 
 
