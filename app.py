@@ -24,22 +24,25 @@ X, Y = np.meshgrid(x, y)
 antenna1 = {
     "x": 0,
     "y": 0,
-    "frequency": 1,
-    "wavelength": 2
+    "frequency": 5,
+    "wavelength": 2,
+    "phase": 0
 }
 
 antenna2 = {
-    "x": 2,
+    "x": 1,
     "y": 0,
-    "frequency": 1,
-    "wavelength": 2
+    "frequency": 5,
+    "wavelength": 2,
+    "phase": np.pi/4
 }
 
 antenna3 = {
-    "x": -2,
+    "x": -1,
     "y": 0,
-    "frequency": 1,
-    "wavelength": 2
+    "frequency": 5,
+    "wavelength": 2,
+    "phase": -np.pi/4
 }
 antennas = [antenna1, antenna2, antenna3]
 
@@ -49,12 +52,12 @@ for a in antennas:
 
 ## SENSOR INFORMATION ##
 sensor1 = {
-    "x": -10,
+    "x": 0,
     "y": 10
 }
 sensor2 = {
-    "x": -10,
-    "y": 0
+    "x": 5,
+    "y": 5
 }
 sensors = [sensor1, sensor2]
 tval = np.linspace(0, 5, 100)
@@ -74,7 +77,7 @@ for s in sensors:
             sensor_x = s["x"]
             sensor_y = s["y"]
             R_sensor = np.sqrt((sensor_x - antenna_x)**2 + (sensor_y - antenna_y)**2)
-            sensor_value += np.cos(k * R_sensor - omega * t) ## signal at sensor is the sum of signals from all antennas
+            sensor_value += np.cos(k * R_sensor - omega * t + antenna["phase"]) ## signal at sensor is the sum of signals from all antennas
         svalues.append(sensor_value) ## average signal from all antennas at sensor location
 
     plt.figure()
@@ -99,7 +102,7 @@ for t in tval:
         omega = antenna["omega"]
         
         R = np.sqrt((X - antenna_x)**2 + (Y - antenna_y)**2)
-        Z += np.cos(k*R - omega*t)
+        Z += np.cos(k*R - omega*t + antenna["phase"]) ## wave field at time t is the sum of contributions from all antennas
         
     Z_frames.append(Z)    
 plt.ion()
