@@ -4,7 +4,7 @@ from sympy import sin, cos
 import numpy as np
 import csv
 import math
-from flask_sqlalchemy import SQLAlchemy
+##from flask_sqlalchemy import SQLAlchemy
 import pandas as pd
 ## VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVvv ##
 ## run "pip install matplotlib" in cmd terminal
@@ -162,18 +162,20 @@ plt.show()
 
 ## simple html page to display results of any kinds of data transformations.
 ## It makes it easy to see without spamming print statements
-app = Flask(__name__)
-@app.route('/')
-def home():
-    result = result
-    return render_template('index.html', info=result)
+#app = Flask(__name__)
+#@app.route('/')
+#def home():
+#    result = result
+#    return render_template('index.html', info=result)
 
 
-class antenna(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-    location = db.Column(db.String, nullable=False)
+#class antenna(db.Model):
+#    id = db.Column(db.Integer, primary_key=True)
+#    name = db.Column(db.String, nullable=False)
+#   location = db.Column(db.String, nullable=False)
 ##
+
+
 
 ## Recieve xm (Time Series)
 
