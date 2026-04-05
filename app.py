@@ -5,8 +5,10 @@ import numpy as np
 import csv
 import math
 from flask_sqlalchemy import SQLAlchemy
-
+## VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVvv ##
 ## run "pip install matplotlib" in cmd terminal
+## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^##
+
 import matplotlib.pyplot as plt
 
 
@@ -64,7 +66,6 @@ tval = np.linspace(0, 5, 100)
 
 for s in sensors:
     svalues = []
- ## time values from 0 to 10 seconds, with 2000 points in between
     for t in tval:
         sensor_value = 0
         for antenna in antennas:
