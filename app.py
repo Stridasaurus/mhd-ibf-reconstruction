@@ -4,7 +4,7 @@
 ## run "pip install pandas"
 ## run "pip install SQLAlchemy"
 ##
-## To run script, type "python app.py" in console
+## To run script, type "flask run" in console
 ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^##
 
 
@@ -30,7 +30,7 @@ import pandas as pd
 ###################################################
 ## MATPLOTLIB LIBRARY
 import matplotlib.pyplot as plt
-##############################################
+###################################################
 
 
 
@@ -255,10 +255,10 @@ x = np.linspace(-10, 10, 400)
 y = np.linspace(-10, 10, 400)
 X, Y = np.meshgrid(x, y)
 ################################################
-Z_frames = []
+Z_frames = [] ## So basically, each value for the function is stored in a matrix, so at teh end, Z_values will be filled with the wave vallues for every coordinate point.
 for t in tval:  
     Z = np.zeros_like(X) ## initialize Z as a zero matrix for each time step
-        
+    print(Z)
     for antenna in antennas:
         antenna_x = antenna["x"]
         antenna_y = antenna["y"]
@@ -266,27 +266,28 @@ for t in tval:
         k = antenna["k"]
         omega = antenna["omega"]
         
-        R = np.sqrt((X - antenna_x)**2 + (Y - antenna_y)**2)
+        R = np.sqrt((X - antenna_x)**2 + (Y - antenna_y)**2) ## Matrix of all distances from each antenna
         Z += np.cos(k*R - omega*t + antenna["phase"]) ## wave field at time t is the sum of contributions from all antennas
         
-    Z_frames.append(Z)
-
+    Z_frames.append(Z) ## Creates the Matrix of values for each time step, which will be used to create the animation
+print(Z_frames) ##verfying 
 plt.ion()
-fig = plt.figure()
+fig = plt.figure() ## TO be dealt with later. Going to add this as a subfigure with the previous data
 for Z in Z_frames:
     plt.clf() ## clear the plot for the next frame
-    plt.contourf(X, Y, Z, levels=50, cmap='gray') ## displays wave as a contour plot
-    for antenna in antennas:
+    ## Countour is nice for this because it shows the wave field as more of a gradient of heights, which represents teh wave really well ebcause like the amplitudes are shown you get what I mean
+    plt.contourf(X, Y, Z, levels=50, cmap='gray') ## displays wave as a contour plot gven the matrices of x, y, and z values, z being the field value at each coordinate. so basically, we're imputtng each x, y, and amplitude coordinates kinda
+    for antenna in antennas: ## This simply throws red dots on the grid to represent each antenna
         plt.scatter(antenna["x"], antenna["y"], color='red', label='Antenna') ## Displays antenna on grid
-    for sensor in sensors:
+    for sensor in sensors: ## THis simply throws BLue dots on the grid ro represent the sensors
         plt.scatter(sensor["x"], sensor["y"], color='blue', label='Sensor') ## Displays sensor on grid
     plt.grid(True)
     plt.xlim(-10, 10) ## displays an easy grid (x,y) bound from (0,0) to (10,10)
     plt.ylim(-10, 10)
     plt.pause(0.01)
 plt.ioff()
-plt.show()
-##########################################
+plt.show() ## this will display the animation. At each time interation, it will dsplay th wave field 
+############################################
 
 
 
