@@ -1,0 +1,180 @@
+import numpy as np
+import sklearn
+from sklearn.decomposition import PCA 
+import matplotlib.pyplot as plt
+
+
+'''
+PCA_sklearn = PCA(n_components=5)
+X_example = np.array([
+    [85, 88, 82, 90, 75],  
+    [78, 75, 80, 85, 88],
+    [92, 94, 88, 91, 79],  
+    [65, 70, 68, 72, 85],  
+    [88, 85, 90, 87, 82], 
+])
+X_pca_sklearn = PCA_sklearn.fit_transform(X_example)
+
+print("PCA using sklearn:")
+print(X_pca_sklearn)
+
+print("\Variance explained by each component:")
+for i, variance in enumerate(PCA_sklearn.explained_variance_ratio_):
+    print(f'component {i+1}: {variance*100:.1f}%')
+print("Total variance explianed by selected components:", np.sum(PCA_sklearn.explained_variance_ratio_)*100, '%')
+
+plt.figure(figsize=(10, 6))
+plt.plot(range(1, len(PCA_sklearn.explained_variance_ratio_) + 1), 
+         PCA_sklearn.explained_variance_ratio_, 'bo-', linewidth=2, markersize=8)
+plt.xlabel('Principal Component', fontsize=12)
+plt.ylabel('Explained Variance Ratio', fontsize=12)
+plt.title('Scree Plot', fontsize=14)
+plt.grid(True, alpha=0.3)
+plt.show()
+'''
+
+
+
+'''
+def pca_from_scratch(X):
+    X_centered = X - np.mean(X, axis=0)
+
+    n = X_centered.shape[0]
+    cov_matrix = (X_centered.T @ X_centered) / (n - 1)
+    
+    #Eigen Value Decomposition
+    eigenvalues, eigenvectors = np.linalg.eig(cov_matrix)
+    
+    #This simply sorts Eigen values in descending order 
+    idx = np.argsort(eigenvalues)[::-1]
+    
+    print("Sorted eigenvalues:", eigenvalues[idx])
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:, idx]
+    
+    #Although eigen vectors from np.linalg,eig are already unit vectors, I made this function as a redundancy to double check that they are in fact unit vectors.
+    eigenvectors = eigenvectors / np.linalg.norm(eigenvectors, axis=0)
+    
+    #Displays variance rations against one another to display how much each PCA contributes to that total variance in the data set.
+    total_var = np.sum(eigenvalues)
+    variance_ratios = eigenvalues / total_var 
+    
+    return eigenvalues, eigenvectors, variance_ratios
+
+X_example = np.array([
+    [85, 88, 82, 90, 75],  
+    [78, 75, 80, 85, 88],  
+    [92, 94, 88, 91, 79],  
+    [65, 70, 68, 72, 85],  
+    [88, 85, 90, 87, 82],  
+    [70, 68, 72, 75, 90],  
+    [95, 92, 94, 89, 84],  
+    [60, 65, 62, 68, 80]   
+])
+evals, evecs, var_ratios = pca_from_scratch(X_example)
+
+print("Eigenvalues (variances along PCs):", evals)
+print("\nUnit eigenvectors (PCs):")
+print(evecs)
+print("\nVariance ratios:", var_ratios)
+
+# Verification: Rotate data to PC coordinates
+X_centered = X_example - np.mean(X_example, axis=0)
+X_pca = X_centered @ evecs
+print("\nData in PCA coordinates (columns: PC1, PC2):")
+print(X_pca)
+print("\nCovariance in PCA space (should be diagonal):")
+print(np.cov(X_pca, rowvar=False))
+'''
+
+
+class ComplexPCA:
+    """
+    Complex Principal Component Analysis (CPCA)
+    Works with complex-valued data by using the complex covariance matrix
+    """
+    def __init__(self, n_components=5):
+        self.n_components = n_components
+        self.components_ = None
+        self.explained_variance_ratio_ = None
+        self.mean_ = None
+        
+    def fit(self, X):
+        """
+        Fit CPCA on complex data X
+        X: complex array of shape (n_samples, n_features)
+        """
+        # Center the data
+        self.mean_ = np.mean(X, axis=0)
+        X_centered = X - self.mean_
+        
+        # Compute complex covariance matrix
+        # Note: For complex data, use conjugate transpose
+        cov_matrix = np.dot(X_centered.conj().T, X_centered) / (X.shape[0] - 1)
+        
+        # Eigendecomposition (returns complex eigenvalues/vectors)
+        eigenvalues, eigenvectors = np.linalg.eig(cov_matrix)
+        
+        # Sort by eigenvalues (real part, since they can be complex but should be real for Hermitian)
+        # For Hermitian matrices, eigenvalues are real, but numerical errors may produce small imag parts
+        eigenvalues_real = np.real(eigenvalues)
+        idx = np.argsort(eigenvalues_real)[::-1]
+        eigenvalues = eigenvalues[idx]
+        eigenvectors = eigenvectors[:, idx]
+        
+        # Store components
+        self.components_ = eigenvectors[:, :self.n_components]
+        
+        # Explained variance ratio (using real parts of eigenvalues)
+        total_var = np.sum(eigenvalues_real)
+        self.explained_variance_ratio_ = eigenvalues_real[:self.n_components] / total_var
+        
+        return self
+    
+    def transform(self, X):
+        """Project data onto CPCA components"""
+        X_centered = X - self.mean_
+        return np.dot(X_centered, self.components_)
+    
+    def fit_transform(self, X):
+        """Fit and transform in one step"""
+        self.fit(X)
+        return self.transform(X)
+
+
+# Example with complex-valued data
+# Creating complex features: real + imaginary parts represent different aspects
+np.random.seed(42)
+n_samples = 5
+n_features = 5
+
+X_example_complex = np.array([
+    [85 + 10j, 88 - 5j,  82 + 3j,  90 + 0j,  75 - 2j],   # Sample 1
+    [78 - 3j,  75 + 8j,  80 - 1j,  85 + 4j,  88 + 5j],   # Sample 2
+    [92 + 7j,  94 - 2j,  88 + 6j,  91 - 3j,  79 + 1j],   # Sample 3
+    [65 + 0j,  70 + 4j,  68 - 2j,  72 + 1j,  85 + 3j],   # Sample 4
+    [88 - 4j,  85 + 3j,  90 - 5j,  87 + 2j,  82 - 1j],   # Sample 5
+])
+
+# Perform Complex PCA
+cpca = ComplexPCA(n_components=5)
+X_cpca = cpca.fit_transform(X_example_complex)
+
+print("Complex PCA using custom implementation:")
+print("Transformed complex components (first 5 samples):")
+print(X_cpca)
+print()
+
+print("Variance explained by each component (magnitude and phase):")
+for i, variance in enumerate(cpca.explained_variance_ratio_):
+    print(f'Component {i+1}: {variance*100:.2f}% (dominant orientation: {np.angle(cpca.components_[:, i], deg=True).mean():.1f}°)')
+
+print(f"Total variance explained by selected components: {np.sum(cpca.explained_variance_ratio_)*100:.2f}%")
+print()
+
+# Show complex loadings (principal components)
+print("Complex PCA components (magnitude and phase information):")
+for i in range(min(3, cpca.components_.shape[1])):
+    print(f"\nComponent {i+1}:")
+    for j, comp in enumerate(cpca.components_[:, i]):
+        print(f"  Feature {j+1}: magnitude = {np.abs(comp):.3f}, phase = {np.angle(comp, deg=True):.1f}°")
