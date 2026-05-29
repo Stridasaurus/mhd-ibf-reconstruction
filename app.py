@@ -164,15 +164,20 @@ tval = np.linspace(ll, hl, resolution)
 #######################
 ## SETS UP CUMULATIVE FIGURE WITH MULTIPLE SUBPLOTS
 ##fig1, axes = plt.subplots(nrows=2)
-import matplotlib.gridspec as gridspec
-fig = plt.figure(figsize=(15, 10))
-gs = gridspec.GridSpec(2,3)
+import matplotlib.gridspec as gridspec ## This library makes it really efficient to make good systems of plots i.e. it translates the pop-up window into a grid system that you can set cells to certain subplots and such. In this case, a couple of the plots are for the time series, and a large section is for the 3d animation.
+fig = plt.figure(figsize=(15, 10)) ## initializes the pop-up window basically. figsize represents the size of the window as it displays on the monitor.
+gs = gridspec.GridSpec(2,3) ## this function uses the library to initialize the grid specifications, gs, as a gridSpec of 2 rows and 3 columns. Hence, the (2,3) represents (# rows, # columns).
 
-axltop = fig.add_subplot(gs[0,0])
-axlbottom = fig.add_subplot(gs[1,0])
-column1 = [axltop, axlbottom]
-ax3d = fig.add_subplot(gs[:, 1:3], projection='3d')
-
+axltop = fig.add_subplot(gs[0,0]) ## add_subplot creates a subfigure for a specific space in the grid spec. For this one, it takes the first column (column 0) and the first row (row 0). Hence, this subplot takes up row 0, column 0, and is just a single cell, essentially.
+axlbottom = fig.add_subplot(gs[1,0]) ## Same concept, but it creates it on the second row (row 1) and the first column (column 0). For reference, use flask run to view the window. These first two are going to be used by the time series. 
+## i.e. for each time series, it takes up once cell as per the grid spec.
+column1 = [axltop, axlbottom] ## this just throws the two cells used by time series into a list so it's easy to use in a "For" Loop. See time series function for reference.
+ax3d = fig.add_subplot(gs[:, 1:], projection='3d') ## This initializes a subplot for the 3d figure. it uses a spec of all rows (represented by ":") and all columns including and after the second column (column 1)
+## therefore the window will look like:
+##
+## | Time Series1 | 3d plot  | 3d plot
+## | Time Series2 | 3d plot  | 3d plot
+##
 
 
 ########################################################
@@ -240,6 +245,12 @@ with app.app_context():
 
         column1[s['id']].set(xlim=[ll,hl], ylim=[-5,5], title=f"Time Series at ({s['x']}, {s['y']})", ylabel='Y-axis', xlabel='X-Axis') ## Intializes the subplot.
         column1[s['id']].plot(times, amplitudes, color='red') ## Plots times against amplitudes in red.
+        ## ^^ For this, since the id is either 0 or 1, each sensor adds to a unique subplot in the pop-up window. I.E, this function will end up looking like:
+        ## column1[0]... << represents the first cell (0,0)
+        ## column1[1]... << represents the second cell (1,0)
+
+        ## the function starts by setting the criteria for the plot. Xlim is how many xvalues it process and ylim is the same. title and labels are straightforward.
+        ## second line plots it obviously.
 ######################################################################
 
 
@@ -248,45 +259,32 @@ with app.app_context():
 ## CREATES 3D ANIMATION OF WAVE PROPAGATION
 ## PS NEED TO EDIT TO ADD TO CUMULATIVE CHART
 ################################################
-X = np.linspace(-10, 10, 100)
-Y = np.linspace(-10, 10, 100)
+X = np.linspace(-10, 10, 100) ## describes the x values as from -10 to positive 10 in 100 steps.
+Y = np.linspace(-10, 10, 100) ## same concept
 
-X, Y = np.meshgrid(X, Y)
+X, Y = np.meshgrid(X, Y) ## initializes the x and y values as an x,y coordinate system essentially
 
-
+## Plot styling. coloring it so the things pop out more.
 fig.patch.set_facecolor('grey')
 ax3d.set_facecolor('grey')
 
-##Z = np.sin(np.sqrt(X**2 + Y**2))
-##surf = [ax3d.plot_surface(X, Y, Z, cmap='cool', edgecolor='none', alpha=0.5, rstride = 2, cstride = 2)]
-
-##ax3d.set_xlim(-5,5); ax3d.set_ylim(-5,5)
-##ax3d.set_zlim(-2,2); ax3d.axis('on')
-
+## sets up a function for animating per frame
 def animate(frame):
-    ax3d.cla()
-    Z = np.zeros_like(X)
+    ax3d.cla() ## clears the previous frame
+    Z = np.zeros_like(X) ## intializes Z as a 0 matrix, i.e. it starts with a fresh grid with no data.
     for antenna in antennas:
-        R = np.sqrt((X - antenna["x"])**2 + (Y - antenna["y"])**2)
+        R = np.sqrt((X - antenna["x"])**2 + (Y - antenna["y"])**2) ## initializes a matrix representing all distances from the antenna.
+        Z += np.cos(antenna['k']*R - antenna['omega']* frame *0.45 + antenna["phase"]) ## describes the wave at a certain point in the grid. This is given by the distance at each point, R, and the "frame*0.45" represents the time. the 0.45 represents that the wave will propagate at 45% speed so its easier to see whats goin on.
+    ax3d.plot_surface(X, Y, Z, cmap='cool', edgecolor='none') ## plots the surface at the x, y, and z (represents the amplitude)
 
-        Z += np.cos(antenna['k']*R - antenna['omega']* frame *0.45 + antenna["phase"])
-    ax3d.plot_surface(X, Y, Z, cmap='cool', edgecolor='none')
-    for antenna in antennas:
-        ax3d.plot([antenna['x'], antenna['x']],
-                [antenna['y'], antenna['y']],
-                [0,10],
-                linewidth=5,
-                color='white')
-    for sensor in sensors:
-        ax3d.scatter(sensor["x"], sensor["y"], color='blue', label='Sensor') ## Displays sensor on grid
-    ax3d.set_facecolor('grey')
-    ax3d.set_xlim(-10,10)
+    ax3d.set_facecolor('grey') ## Styling
+    ax3d.set_xlim(-10,10) ## Sets the 3d box x, y, and z specifications
     ax3d.set_ylim(-10,10); ax3d.set_zlim(-5, 5)
-    ax3d.axis('on'); ax3d.view_init(elev=60,
-                                 azim=(frame+30)*0.5)
+    ax3d.axis('on'); ax3d.view_init(elev=60, ## displays the plot at 60deg upwards for a birds-eye view
+                                 azim=(frame+30)*0.5) ## azim represents azim. This is constantly modified per frame to make it appear to rotate.
 
-ani = FuncAnimation(fig, animate, frames=100, interval=10)
-plt.show()
+ani = FuncAnimation(fig, animate, frames=100, interval=10) ## uses the FuncAnimation to actually animate it for each frame.
+plt.show() ## finally displays the plot
 
 ############################################
 ## Routing, prob not useful but ima keep it
